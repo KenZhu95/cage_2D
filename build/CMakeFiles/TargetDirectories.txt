@@ -1,0 +1,7 @@
+/v/filer5b/tmpclass/kenzhu/CG/cage_2D/build/CMakeFiles/edit_cache.dir
+/v/filer5b/tmpclass/kenzhu/CG/cage_2D/build/CMakeFiles/rebuild_cache.dir
+/v/filer5b/tmpclass/kenzhu/CG/cage_2D/build/CMakeFiles/pmdreader.dir
+/v/filer5b/tmpclass/kenzhu/CG/cage_2D/build/CMakeFiles/utgraphicsutil.dir
+/v/filer5b/tmpclass/kenzhu/CG/cage_2D/build/src/CMakeFiles/edit_cache.dir
+/v/filer5b/tmpclass/kenzhu/CG/cage_2D/build/src/CMakeFiles/rebuild_cache.dir
+/v/filer5b/tmpclass/kenzhu/CG/cage_2D/build/src/CMakeFiles/animation.dir
