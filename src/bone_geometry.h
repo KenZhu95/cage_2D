@@ -202,6 +202,7 @@ struct Skeleton {
 struct Vertex {
 	int id;
 	glm::vec2 position;
+	glm::vec2 position_init;
 };
 
 struct Edge
@@ -209,14 +210,15 @@ struct Edge
 	int id;
 	Vertex* vertex_1;
 	Vertex* vertex_2;
+	glm::vec2 normal_init;
 	glm::vec2 normal;
 	void calculateNormal();
+	void initiateNormal();
 };
 
 struct Weights {
 	std::vector<float> weight_vertices;
 	std::vector<float> weight_edges;
-	std::vector<float> edge_scalings;
 };
 
 
@@ -225,8 +227,11 @@ struct Cage {
 	std::vector<Vertex> vertices;
 	std::vector<Edge> edges;
 	std::vector<Weights> weigtht_functions;
-	void getNormals();
-	void getWeights(glm::vec2 eta);
+	std::vector<float> edge_scalings;
+	void updateNormals();
+	void initNormals();
+	void initWeights(glm::vec2 eta);
+	void updateWeights();
 };
 
 struct Mesh {
@@ -261,7 +266,8 @@ struct Mesh {
 
 	void loadPmd(const std::string& fn);
 	void generateCage();
-	void calculateCageWeights();
+	void initCageWeights();
+	void updateCageWeights();
 	int getNumberOfBones() const;
 	glm::vec3 getCenter() const { return 0.5f * glm::vec3(bounds.min + bounds.max); }
 	const Configuration* getCurrentQ() const; // Configuration is abbreviated as Q

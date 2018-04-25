@@ -8,6 +8,9 @@
 #include <glm/gtx/io.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <math.h>
+
+#define PI 3.14159265
 
 /*
  * For debugging purpose.
@@ -164,14 +167,27 @@ void Edge::calculateNormal() {
 	normal = nor;
 }
 
-void Cage::getNormals() {
+void Edge::initiateNormal() {
+	glm::vec2 diff = vertex_2->position_init - vertex_2->position_init;
+	glm::vec2 nor = glm::vec2(-diff[1], diff[0]);
+	normal = nor;
+	normal_init = nor;
+}
+
+void Cage::updateNormals() {
 	for (auto& edge : edges) {
 		edge.calculateNormal();
 	}
 }
 
-void Cage::getWeights(glm::vec2 eta) {
-	//initialize phi ans varphi functions
+void Cage::initNormals() {
+	for (auto& edge : edges) {
+		edge.initiateNormal();
+	}
+}
+
+void Cage::initWeights(glm::vec2 eta) {
+	//initialize phi and varphi functions, as well as scalings
 	Weights weights;
 	for (uint i = 0; i < vertices.size(); i++) {
 		weights.weight_vertices.emplace_back(0.0f);
@@ -179,13 +195,41 @@ void Cage::getWeights(glm::vec2 eta) {
 	for (uint i = 0; i < edges.size(); i++) {
 		weights.weight_edges.emplace_back(0.0f);
 	}
-	for (uint i = 0; i < edges.size(); i++) {
-		weights.edge_scalings.emplace_back(1.0f);
-	}
 
 	for (uint i = 0; i < edges.size(); i++) {
-
+		Edge edge = edges[(int)i];
+		Vertex* v1 = edge.vertex_1;
+		Vertex* v2 = edge.vertex_2;
+		glm::vec2 a = v2->position_init - v1->position_init;
+		glm::vec2 b = v1->position_init - eta;
+		float Q = glm::dot(a,a);
+		float S = glm::dot(b,b);
+		float R = 2 * glm::dot(a,b);
+		float BA = glm::length(a) * glm::dot(b,edge.normal_init);
+		float SRT = sqrt(4*S*Q - R*R);
+		float L0 = log(S);
+		float L1 = log(S+Q+R);
+		float A0 = atan(R/SRT) / SRT;
+		float A1 = atan((2*Q+R)/SRT) / SRT;
+		float A10 = A1 - A0;
+		float L10 = L1 - L0;
+		weight_edges[i] = -glm::length(a) / (4*PI) * ((4*S-R*R/Q)*A10 + R/(2*Q)*L10 + L1 -2);
+		weight_vertices[v2.id] = weight_vertices[v2.id] - BA/(2*PI) * (L10/(2*Q) - A10 *R/Q);
+		weight_vertices[v1.id] = weight_vertices[v1.id] + BA/(2*PI) * (L10/(2*Q) - A10 *(2+R/Q));
 	}
+
+	weigtht_functions.emplace_back(weights);
+
+}
+
+void Cage::updateWeights() {
+	for (uint i=0; i<edges.size(); i++) {
+		Edge edge = edges[(int)i];
+		Vertex* v1 = edge.vertex_1;
+		Vertex* v2 = edge.vertex_2;
+		edge_scalings[(int)i] = glm::length(v2->position - v1->position) / glm::length(v2->position_init - v1->position_init);
+	}
+
 }
 
 
@@ -250,11 +294,19 @@ void Mesh::generateCage() {
 	cage.getNormals();
 }
 
-void Mesh::calculateCageWeights() {
+void Mesh::initCageWeights() {
 	for (auto& joint : skeleton.joints) {
 		glm::vec2 pos = glm::vec2(joint.position[0], joint.position[1]);
-		cage.getWeights(pos);
+		cage.initWeights(pos);
 	}
+
+	for (int i=0; i < cage.edges.size(); i++) {
+		cage.edge_scalings.emplace_back(0.0f);
+	}
+}
+
+void Mesh::updateCageWeights() {
+	cage.updateWeights();
 }
 
 int Mesh::getNumberOfBones() const
